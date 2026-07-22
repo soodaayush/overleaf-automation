@@ -1,6 +1,9 @@
+import time
+
 from dotenv import load_dotenv
 from DrissionPage import ChromiumPage, ChromiumOptions
 import os
+import git
 
 load_dotenv()
 
@@ -20,6 +23,10 @@ def main():
 
         pdf_link = page.ele("tag:a@class:pdf-toolbar-btn")
         pdf_link.click()
+
+        time.sleep(5)
+
+        commit_file()
     else:
         if page.ele('@name=email') and page.url == "https://overleaf.com/login":
             email_input = page.ele('css:input[name="email"]')
@@ -42,6 +49,23 @@ def main():
 
             pdf_link = page.ele("tag:a@class:pdf-toolbar-btn")
             pdf_link.click()
+
+            commit_file()
+
+
+def commit_file():
+    os.replace(r'C:\Users\aayus\Downloads\UW_Resume___v1_0.pdf', r'C:\Users\aayus\Development\aayushsood-v2\public\assets\resume\resume.pdf')
+
+    time.sleep(2)
+
+    repo = git.Repo(r'C:\Users\aayus\Development\aayushsood-v2')
+
+    repo.git.add(A=True)
+
+    repo.index.commit("Updated resume")
+
+    origin = repo.remote(name="origin")
+    origin.push()
 
 
 if __name__ == "__main__":
