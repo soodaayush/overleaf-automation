@@ -1,33 +1,48 @@
-import os
-from playwright.sync_api import sync_playwright
-from playwright_recaptcha import recaptchav2
 from dotenv import load_dotenv
+from DrissionPage import ChromiumPage, ChromiumOptions
+import os
 
 load_dotenv()
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
-    context = browser.new_context()
-    page = context.new_page()
+def main():
+    co = ChromiumOptions()
+    co.set_browser_path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
 
-    page.goto("https://www.overleaf.com/login")
+    page = ChromiumPage(co)
 
-    print(f"Page Title: {page.title()}")
+    page.get("https://overleaf.com/login")
 
-    page.locator("input#email").fill(os.getenv("EMAIL"))
-    page.locator("input#password").fill(os.getenv("PASSWORD"))
+    if "project" in page.url:
+        pdf_btn = page.ele("tag:a@text():UW Resume")
+        pdf_btn.click()
 
-    page.locator("button.btn").first.click()
+        page.wait(5)
 
-    with recaptchav2.SyncSolver(page) as solver:
-        token = solver.solve_recaptcha(wait=True)
+        pdf_link = page.ele("tag:a@class:pdf-toolbar-btn")
+        pdf_link.click()
+    else:
+        if page.ele('@name=email') and page.url == "https://overleaf.com/login":
+            email_input = page.ele('css:input[name="email"]')
 
-        page.wait_for_load_state("networkidle")
+            email_input.input(os.getenv("EMAIL"))
 
-    page.locator("text=UW Resume").click()
-    page.wait_for_timeout(2000)
+            pass_input = page.ele('css:input[name="password"]')
 
-    context.close()
-    browser.close()
+            pass_input.input(os.getenv("PASSWORD"))
+
+            submit_btn = page.ele('css:button[type="submit"]')
+            submit_btn.click()
+
+            page.wait(5)
+
+            pdf_btn = page.ele("tag:a@text():UW Resume")
+            pdf_btn.click()
+
+            page.wait(5)
+
+            pdf_link = page.ele("tag:a@class:pdf-toolbar-btn")
+            pdf_link.click()
 
 
+if __name__ == "__main__":
+    main()
