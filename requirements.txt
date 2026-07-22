@@ -1,0 +1,4 @@
+playwright
+playwright-recaptcha
+dotenv
+standard-aifc

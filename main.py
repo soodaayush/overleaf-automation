@@ -7,7 +7,6 @@ load_dotenv()
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False)
-
     context = browser.new_context()
     page = context.new_page()
 
@@ -25,7 +24,10 @@ with sync_playwright() as p:
 
         page.wait_for_load_state("networkidle")
 
-    page.get_by_text("UW Resume").click()
+    page.locator("text=UW Resume").click()
     page.wait_for_timeout(2000)
+
+    context.close()
+    browser.close()
 
 
