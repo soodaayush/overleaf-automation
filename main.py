@@ -1,4 +1,6 @@
 import time
+from pathlib import Path
+import glob
 
 from dotenv import load_dotenv
 from DrissionPage import ChromiumPage, ChromiumOptions
@@ -51,18 +53,26 @@ def main():
 
 
 def commit_file():
-    os.replace(r'C:\Users\aayus\Downloads\UW_Resume___v1_0.pdf', r'C:\Users\aayus\Development\aayushsood-v2\public\assets\resume\resume.pdf')
+    base_path = Path.home()
+
+    list_of_files = glob.glob(str(base_path / "Downloads" / "*.pdf"))
+    latest_file = max(list_of_files, key=os.path.getctime)
+
+    source_path = latest_file
+    destination_path = base_path / "Development" / "aayushsood-v2" / "public" / "assets" / "resume" / "resume.pdf"
+
+    os.replace(source_path, destination_path)
 
     time.sleep(2)
 
-    repo = git.Repo(r'C:\Users\aayus\Development\aayushsood-v2')
-
-    repo.git.add(A=True)
-
-    repo.index.commit("Updated resume")
-
-    origin = repo.remote(name="origin")
-    origin.push()
+    # repo = git.Repo(r'C:\Users\aayus\Development\aayushsood-v2')
+    #
+    # repo.git.add(A=True)
+    #
+    # repo.index.commit("Updated resume")
+    #
+    # origin = repo.remote(name="origin")
+    # origin.push()
 
 
 if __name__ == "__main__":
