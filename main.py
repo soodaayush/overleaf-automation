@@ -8,10 +8,7 @@ import git
 load_dotenv()
 
 def main():
-    co = ChromiumOptions()
-    co.set_browser_path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-
-    page = ChromiumPage(co)
+    page = ChromiumPage()
 
     page.get("https://overleaf.com/login")
 
