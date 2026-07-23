@@ -1,78 +1,83 @@
 import time
 from pathlib import Path
 import glob
-
 from dotenv import load_dotenv
-from DrissionPage import ChromiumPage, ChromiumOptions
+from DrissionPage import ChromiumPage
 import os
 import git
 
 load_dotenv()
 
-def main():
-    page = ChromiumPage()
+page = ChromiumPage()
 
-    page.get("https://overleaf.com/login")
+LOGIN_URL = "https://overleaf.com/login"
+BASE_PATH = Path.home()
+REPO_PATH = BASE_PATH / "Development" / "aayushsood-v2"
+DESTINATION_PATH = REPO_PATH / "public" / "assets" / "resume" / "resume.pdf"
+RESUME_LINK_TEXT = "UW Resume"
 
-    if "project" in page.url:
-        pdf_btn = page.ele("tag:a@text():UW Resume")
-        pdf_btn.click()
 
-        page.wait(5)
+def log_in():
+    email_input = page.ele('css:input[name="email"]')
 
-        pdf_link = page.ele("tag:a@class:pdf-toolbar-btn")
-        pdf_link.click()
+    email_input.input(os.getenv("EMAIL"))
 
-        time.sleep(5)
+    pass_input = page.ele('css:input[name="password"]')
 
-        commit_file()
-    else:
-        if page.ele('@name=email') and page.url == "https://overleaf.com/login":
-            email_input = page.ele('css:input[name="email"]')
+    pass_input.input(os.getenv("PASSWORD"))
 
-            email_input.input(os.getenv("EMAIL"))
+    submit_btn = page.ele('css:button[type="submit"]')
+    submit_btn.click()
 
-            pass_input = page.ele('css:input[name="password"]')
+    page.wait(5)
 
-            pass_input.input(os.getenv("PASSWORD"))
+def find_resume():
+    pdf_btn = page.ele(f"tag:a@text():{RESUME_LINK_TEXT}")
+    pdf_btn.click()
 
-            submit_btn = page.ele('css:button[type="submit"]')
-            submit_btn.click()
+    page.wait(5)
 
-            page.wait(5)
+    pdf_link = page.ele("tag:a@class:pdf-toolbar-btn")
+    pdf_link.click()
 
-            pdf_btn = page.ele("tag:a@text():UW Resume")
-            pdf_btn.click()
-
-            page.wait(5)
-
-            pdf_link = page.ele("tag:a@class:pdf-toolbar-btn")
-            pdf_link.click()
-
-            commit_file()
-
+    time.sleep(5)
 
 def commit_file():
-    base_path = Path.home()
+    repo = git.Repo(REPO_PATH)
 
-    list_of_files = glob.glob(str(base_path / "Downloads" / "*.pdf"))
+    repo.git.add(A=True)
+
+    repo.index.commit("Updated resume")
+
+    origin = repo.remote(name="origin")
+    origin.push()
+
+def move_file():
+    list_of_files = glob.glob(str(BASE_PATH / "Downloads" / "*.pdf"))
     latest_file = max(list_of_files, key=os.path.getctime)
 
     source_path = latest_file
-    destination_path = base_path / "Development" / "aayushsood-v2" / "public" / "assets" / "resume" / "resume.pdf"
 
-    os.replace(source_path, destination_path)
+    os.replace(source_path, DESTINATION_PATH)
 
     time.sleep(2)
 
-    # repo = git.Repo(r'C:\Users\aayus\Development\aayushsood-v2')
-    #
-    # repo.git.add(A=True)
-    #
-    # repo.index.commit("Updated resume")
-    #
-    # origin = repo.remote(name="origin")
-    # origin.push()
+def main():
+    try:
+        page.get(LOGIN_URL)
+
+        if "project" in page.url:
+            find_resume()
+        else:
+            log_in()
+            find_resume()
+
+        move_file()
+        commit_file()
+    except Exception as e:
+        print(f"Automation failed: {e}")
+    finally:
+        page.quit()
 
 
 if __name__ == "__main__":
